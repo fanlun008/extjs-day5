@@ -1,0 +1,346 @@
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>MyTabPanel</title>
+  <link rel="stylesheet" type="text/css" href="./resources/css/ext-all.css" />
+  <script type="text/javascript" src="./adapter/ext/ext-base.js"></script>
+  <script type="text/javascript" src="./ext-all.js"></script>
+  <script type="text/javascript">
+    Ext.onReady(function () {
+
+      var sm = new Ext.grid.CheckboxSelectionModel({
+        handleMouseDown: Ext.emptyFn
+      });
+
+      var cm = new Ext.grid.ColumnModel([
+        new Ext.grid.RowNumberer(),
+        sm,
+        {
+          header: '姓名',
+          dataIndex: 'name',
+          editor: new Ext.grid.GridEditor(
+            new Ext.form.TextField({
+              allowBlank: false
+            })
+          )
+
+        },
+        {
+          header: '教室',
+          dataIndex: 'class',
+          editor: new Ext.grid.GridEditor(
+            new Ext.form.TextField({
+              allowBlank: false
+            })
+          )
+        },
+        {
+          header: '性别',
+          dataIndex: 'sex',
+          editor: new Ext.grid.GridEditor(
+            new Ext.form.TextField({
+              allowBlank: false
+            })
+          )
+        },
+        {
+          header: '年龄',
+          dataIndex: 'age',
+          editor: new Ext.grid.GridEditor(
+            new Ext.form.TextField({
+              allowBlank: false
+            })
+          )
+        },
+        {
+          header: '出生日期',
+          dataIndex: 'birthday',
+          editor: new Ext.grid.GridEditor(new Ext.form.DateField({
+            format: 'd/m/Y',
+            minValue: '14/12/1900',
+            disabledDaysText: 'ֻ年龄'
+          })),
+          // renderer: function (value) {
+          //   return value.format("d/m/Y");
+          // }
+        },
+        {
+          header: '头像',
+          dataIndex: 'avatar',
+          renderer: renderAvatar
+        }
+      ]);
+
+      function renderAvatar(value) {
+        if (value === 'male') {
+          return "<img  style='width:15px;height:15px' src='male.svg'/>"
+        } else {
+          return "<img style='width:15px;height:15px' src='female.svg'/>"
+        }
+      }
+
+      function renderSex(value) {
+        if (value == 'male') {
+          return "<span style='color:red;font-weight:bold;'>红男</span><img  src='user_male.png' />";
+        } else {
+          return "<span style='color:green;font-weight:bold;'>红女</span><img src='user_female.png' />";
+        }
+      }
+
+      var data2 = [
+        ['bill', 'gibraltar1', 'male', 23, '15/01/1996', 'male'],
+        ['Andrew', 'gibraltar1', 'male', 24, '15/01/1996', 'male'],
+        ['Tiger', 'gibraltar1', 'male', 22, '15/01/1996', 'male'],
+        ['Geni', 'gibraltar2', 'female', 19, '15/01/1996', 'female'],
+        ['Vill', 'gibraltar2', 'female', 19, '15/01/1996', 'female']
+      ];
+
+      var store = new Ext.data.GroupingStore({
+        proxy: new Ext.data.MemoryProxy(data2),
+        reader: new Ext.data.ArrayReader({}, [{
+            name: 'name'
+          },
+          {
+            name: 'class'
+          },
+          {
+            name: 'sex'
+          },
+          {
+            name: 'age'
+          },
+          {
+            name: 'birthday',
+            type: 'date',
+            // dateFormat: 'Y-m-d'
+            dateFormat: 'd/m/Y'
+          },
+          {
+            name: 'avatar'
+          },
+        ]),
+        groupField: 'class',
+      });
+
+      store.loadData(data2);
+
+      var grid = new Ext.grid.EditorGridPanel({
+        autoHeight: true,
+        renderTo: 'main-container',
+        loadMask: true,
+        store: store,
+        cm: cm,
+        sm: sm,
+        view: new Ext.grid.GroupingView(),
+        bbar: new Ext.PagingToolbar({
+          pageSize: 4,
+          store: store,
+          displayInfo: true,
+          displayMsg: '显示第 {0} 条到 {1} 条记录，一共 {2} 条',
+          emptyMsg: "没有记录"
+        }),
+        tbar: new Ext.Toolbar(['-',
+          {
+            text: 'Add',
+            handler: function () {
+              var model = grid.getSelectionModel();
+              console.log(model)
+              win.show();
+            }
+          },
+          '-',
+          {
+            text: 'delete',
+            handler: function () {
+              Ext.Msg.confirm('Message', 'Are you sure delete this record？', function (btn) {
+                if (btn == 'yes') {
+                  var model = grid.getSelectionModel();
+                  var selections = model.getSelections();
+                  console.log(selections);
+                  selections.forEach(item => {
+                    store.remove(store.getById(item.id));
+                  });
+                }
+              })
+            }
+          }
+
+        ])
+      })
+
+      var addForm = new Ext.form.FormPanel({
+        labelAlign: 'right',
+        labelWidth: 60,
+        autoHeight: true,
+        frame: true,
+        defaultType: 'textfield',
+        items: [{
+            fieldLabel: '姓名',
+            name: 'name'
+          },
+          {
+            fieldLabel: '教室',
+            name: 'class'
+          },
+          {
+            fieldLabel: '性别',
+            xtype: "combo",
+            name: 'sex',
+            store: new Ext.data.SimpleStore({
+              fields: ['text', 'value'],
+              data: [
+                ['male', '男'],
+                ['female', '女']
+              ]
+            }),
+            displayField: 'text',
+            valueField: 'value',
+            mode: 'local',
+            emptyText: '请选择'
+          },
+          {
+            fieldLabel: '年龄',
+            name: 'age'
+          },
+          {
+            xtype: 'datefield',
+            fieldLabel: '出生日期',
+            name: 'birthday'
+          }, {
+            fieldLabel: '头像',
+            xtype: "combo",
+            name: 'avatar',
+            store: new Ext.data.SimpleStore({
+              fields: ['text', 'value'],
+              data: [
+                ['male', '男头像'],
+                ['female', '女头像']
+              ]
+            }),
+            displayField: 'text',
+            valueField: 'value',
+            mode: 'local',
+            emptyText: '请选择'
+          }
+        ]
+      });
+
+      var win = new Ext.Window({
+        layout: 'fit',
+        width: 300,
+        title: 'form',
+        autoHeight: true,
+        closeAction: 'hide',
+
+        items: [addForm],
+
+        buttons: [{
+          text: '提交',
+          listeners: {
+            click: function () {
+              console.log(addForm.getForm().getValues())
+              var form = addForm.getForm().getValues()
+              var newRecord = new StudentRecord({
+                name: form.name,
+                class: form.class,
+                sex: form.sex,
+                age: form.age,
+                birthday: form.birthday,
+                avatar: form.avatar
+              });
+              store.insert(0, newRecord);
+              grid.getView().refresh();
+              win.close()
+            }
+          }
+        }]
+      });
+      // win.show();
+
+      var StudentRecord = Ext.data.Record.create([{
+          name: 'name',
+          type: 'string'
+        },
+        {
+          name: 'class',
+          type: 'string'
+        },
+        {
+          name: 'sex',
+          type: 'string'
+        },
+        {
+          name: 'age',
+          type: 'number'
+        },
+        {
+          name: 'birthday',
+          type: 'date',
+          dateFormat: 'd/m/Y'
+        },
+        {
+          name: 'avatar',
+          type: 'string'
+        }
+      ]);
+
+      var contextmenu = new Ext.menu.Menu({
+        id: 'theContextMenu',
+        items: [{
+          text: 'Up',
+          disable: true,
+          handler: function () {
+            var record = grid.getSelectionModel().getSelections();
+            var index = store.indexOf(record[0]);
+            if (index === 0) return false;
+            store.remove(record);
+            store.insert(index - 1, record);
+            grid.getView().refresh();
+          }
+        }, {
+          text: 'Down',
+          handler: function () {
+            var record = grid.getSelectionModel().getSelections();
+            var index = store.indexOf(record[0]);
+            if (index === (store.getCount() - 1)) return false;
+            store.remove(record);
+            store.insert(index + 1, record);
+            grid.getView().refresh();
+          }
+        }, {
+          text: 'First',
+          handler: function () {
+            var record = grid.getSelectionModel().getSelections();
+            store.remove(record);
+            store.insert(0, record);
+            grid.getView().refresh();
+          }
+        }, {
+          text: 'Last',
+          handler: function () {
+            var record = grid.getSelectionModel().getSelections();
+            store.remove(record);
+            store.insert(store.getCount(), record);
+            grid.getView().refresh();
+          }
+        }]
+      });
+
+      grid.on("rowcontextmenu", function (grid, rowIndex, e) {
+        e.preventDefault();
+        grid.getSelectionModel().selectRow(rowIndex);
+        contextmenu.showAt(e.getXY());
+      })
+
+    })
+  </script>
+</head>
+
+<body>
+  <div id="main-container">
+
+  </div>
+</body>
+
+</html>
