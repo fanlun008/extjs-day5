@@ -251,7 +251,8 @@
               });
               store.insert(0, newRecord);
               grid.getView().refresh();
-              win.close()
+              win.hide()
+              addForm.getForm().reset();
             }
           }
         }]
